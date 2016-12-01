@@ -14,7 +14,9 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/ghbooth12/bloc_works"
   spec.license       = "MIT"
 
-  spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
+  spec.files         = `git ls-files | grep -v "\.gem$"`.split("\n").reject { |f| f.match(%r{^(test|spec|features|gem)/}) }
+  # ['file1.rb', 'file2.rb']
+  # [..., 'bloc_works-0.1.0.gem', ...]
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
