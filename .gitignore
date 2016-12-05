@@ -7,3 +7,6 @@
 /pkg/
 /spec/reports/
 /tmp/
+
+bloc_works-*.gem
+bloc_works-0.1.0.gem
