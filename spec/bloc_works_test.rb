@@ -1,4 +1,4 @@
-require_relative 'lib/bloc_works'
+require_relative '../lib/bloc_works'
 
 require 'test/unit'
 require 'rack/test'
