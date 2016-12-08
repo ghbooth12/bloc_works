@@ -1,6 +1,7 @@
 module BlocWorks
   class Application
     def controller_and_action(env)
+      puts ">>>> Rounter1 is working, #{env}"
       # If env["PATH_INFO"] = "/labels/new/" (String that Rack sets to the path of the HTTP request.)
       # _, controller, action, _ = ["", "labels", "new", ""]
       # _ -> "", controller -> "labels", action -> "new"
@@ -16,6 +17,7 @@ module BlocWorks
     end
 
     def fav_icon(env)
+      puts ">>>> Rounter2 is working, #{env}"
       if env['PATH_INFO'] == '/favicon.ico'
         # This route returns an empty HTML page, with the status code 404.
         return [404, {'Content-Type' => 'text/html'}, []]

@@ -3,10 +3,12 @@ require "erubis"
 module BlocWorks
   class Controller
     def initialize(env)
+      puts ">>>> Controller class Initialize, env: #{env}"
       @env = env
     end
 
     def render(view, locals = {})
+      puts ">>>> Controller class render, view: #{view}, locals: #{locals}"
       # File.join("usr", "mail", "gumby")   #=> "usr/mail/gumby"
       filename = File.join("app", "views", controller_dir, "#{view}.html.erb")
       template = File.read(filename)
