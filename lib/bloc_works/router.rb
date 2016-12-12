@@ -42,6 +42,16 @@ module BlocWorks
       # k.instance_eval { @secret }   #=> 99
       # ==================================
     end
+
+    # Map URLs to routes and look up routes when given a URL.
+    def get_rack_app(env)
+      puts "\n<router.rb> BlocWorks::Application.get_rack_app(env)\nenv: #{env}\nenv['PATH_INFO']: #{env["PATH_INFO"]}"
+      if @router.nil?
+        raise "No routes defined"
+      end
+
+      @router.look_up_url(env["PATH_INFO"])
+    end
   end
 
   class Router
@@ -106,27 +116,32 @@ module BlocWorks
     # 'look_up_url' takes a URL and checks it against the @rules array of mapped routes.
     # If it finds a match it uses 'get_destination' to return the correct controller and action to call.
     def look_up_url(url)
-      puts "\n<router.rb> BlocWorks::Router.look_up_url(url)\nurl: #{url}\n"
+      puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (1)\nurl: #{url}\n"
       @rules.each do |rule|
         # match is a Regexp method
         # /hay/.match('haystack') => #<MatchData "hay">
         rule_match = rule[:regex].match(url)
+        puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (2)\nrule: #{rule}, rule_match: #{rule_match}\n"
 
         if rule_match  # "", [] is truthy
           options = rule[:options] #=> {:default => { "action" => "show" }}
           params = options[:default].dup  # Read more below about dup
+          puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (3)\noptions: #{options}, params: #{params}\n"
 
           # rule[:vars] = ["controller", "id"]
           rule[:vars].each_with_index do |var, index|
             # params = { "action" => "show" }
             params[var] = rule_match.captures[index] # Read more below about captures
+            puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (4)\nvar: #{var}, index: #{index}, params[var]: #{params[var]}\n"
           end
 
           if rule[:destination]
+            puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (5)\nrule[:destination]: #{rule[:destination]}\n"
             return get_destination(rule[:destination], params)
           else
             controller = params["controller"]
             action = params["action"]
+            puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (6)\ncontroller: #{controller}\n, action: #{action}"
             return get_destination("#{controller}##{action}", params)
           end
         end
@@ -136,25 +151,17 @@ module BlocWorks
     def get_destination(destination, routing_params = {})
       puts "\n<router.rb> BlocWorks::Router.get_destination(destination, routing_params = {})\ndestination: #{destination}, routing_params: #{routing_params}\n"
       if destination.respond_to?(:call)
+        puts "\n<router.rb> BlocWorks::Router.get_destination(destination, routing_params = {})\nIF destination.respond_to?(:call)\n"
         return destination
       end
 
-      if destination =~ /^([^#]+)#([^#]+)&/
+      if destination =~ /([^#]+)#([^#]+)/
         name = $1.capitalize
         controller = Object.const_get("#{name}Controller")
+        puts "\n<router.rb> BlocWorks::Router.get_destination(destination, routing_params = {})\nIF destination =~ /^([^#]+)#([^#]+)&/\nname: #{name}, conotroller: #{controller}, controller's class: #{controller.class}, $1: #{$1}, $2: #{$2}"
         return controller.action($2, routing_params)
       end
       raise "Destination no found: #{destination}"
-    end
-
-    # Map URLs to routes and look up routes when given a URL.
-    def get_rack_app(env)
-      puts "\n<router.rb> BlocWorks::Router.get_rack_app(env)\nenv: #{env}\nenv['PATH_INFO']: #{env["PATH_INFO"]}"
-      if @router.nil?
-        raise "No routes defined"
-      end
-
-      @router.look_up_url(env["PATH_INFO"])
     end
   end # Ends Router
 end # Ends BlocWorks module

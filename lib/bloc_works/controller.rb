@@ -39,7 +39,8 @@ module BlocWorks
     def params
       puts "\n<controller.rb> BlocWorks::Controller.params\n@routing_params: #{@routing_params}\n"
       # With request object, it is possible to retrieve "params".
-      request.params.merge(@routing_params)
+      request
+      @request.params.merge(@routing_params)
     end
 
     # This creates a new Rack response object, or raises an error
@@ -61,7 +62,7 @@ module BlocWorks
 
     def get_response
       puts "\n<controller.rb> BlocWorks::Controller.get_response\n@response: #{@response}\n"
-      @response
+      @response  # @response: #<Rack::Response:0x007ffd11270db0>
     end
 
     def has_response?

@@ -37,6 +37,7 @@ module BlocWorks
       rack_app = get_rack_app(env)
       puts "\n<bloc_works.rb> BlocWorks::Application.call(env)\nAFTER rack_app: #{rack_app}\n"
       rack_app.call(env)
+      # rack_app: #<Proc:0x007ffd112996c0@/.../bloc_works/lib/bloc_works/controller.rb:28>
     end
   end
 end
