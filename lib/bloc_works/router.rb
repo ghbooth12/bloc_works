@@ -89,7 +89,11 @@ module BlocWorks
         case part[0] # part is ":controller"
         when ":"
           vars << part[1..-1]
-          regex_parts << "([a-zA-Z0-9]+)" # any one or more words
+          if part[1..-1] == "id"
+            regex_parts << "([0-9]+)" # any one or more words
+          else
+            regex_parts << "([a-zA-Z0-9]+)" # any one or more words
+          end
         when "*"
           vars << part[1..-1]  # . (Any character except line break), * (zero or more)
           regex_parts < "(.*)" # .* (first sentence)
@@ -141,7 +145,7 @@ module BlocWorks
           else
             controller = params["controller"]
             action = params["action"]
-            puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (6)\ncontroller: #{controller}\n, action: #{action}"
+            puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (6)\ncontroller: #{controller}, action: #{action}"
             return get_destination("#{controller}##{action}", params)
           end
         end
