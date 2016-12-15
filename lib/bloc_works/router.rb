@@ -1,3 +1,5 @@
+require 'pry'
+
 module BlocWorks
   class Application
     def controller_and_action(env)
@@ -46,6 +48,7 @@ module BlocWorks
     # Map URLs to routes and look up routes when given a URL.
     def get_rack_app(env)
       puts "\n<router.rb> BlocWorks::Application.get_rack_app(env)\nenv: #{env}\nenv['PATH_INFO']: #{env["PATH_INFO"]}"
+      binding.pry
       if @router.nil?
         raise "No routes defined"
       end
