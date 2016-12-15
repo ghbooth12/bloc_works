@@ -48,7 +48,7 @@ module BlocWorks
     # Map URLs to routes and look up routes when given a URL.
     def get_rack_app(env)
       puts "\n<router.rb> BlocWorks::Application.get_rack_app(env)\nenv: #{env}\nenv['PATH_INFO']: #{env["PATH_INFO"]}"
-      binding.pry
+      # binding.pry
       if @router.nil?
         raise "No routes defined"
       end
@@ -66,7 +66,7 @@ module BlocWorks
 
     # This builds route / action rules and add them to @rules.
     def map(url, *args)
-      puts "\n<router.rb> BlocWorks::Router.map(url, *args)\nBEFORE url: #{url}, *args: #{args}\n"
+      puts "\n<router.rb> BlocWorks::Router.map(url, *args)\n"
       # map(":controller/:id", default: { "action" => "show" })
       # Then options receive {:default => { "action" => "show" }}
       options = {}
@@ -81,27 +81,18 @@ module BlocWorks
       raise "Too many args" if args.size > 0
 
       # Split url and map each part to a regular expression, while building an array of variables(ids, controllers, actions).
-      parts = url.split("/")
-      parts.reject! {|part| part.empty?}  # Reject "", []
+      url_parts = url.split("/")
+      url_parts.reject! {|part| part.empty?}  # Reject "", []
 
-      vars, regex_parts = [], []
-
+      vars = []
       # url is ":controller/:id"
-      # parts is [":controller", ":id"]
-      parts.each do |part|
-        case part[0] # part is ":controller"
-        when ":"
+      # url_parts is [":controller", ":id"]
+      regex_parts = url_parts.map do |part|
+        if part[0] == ":"
           vars << part[1..-1]
-          if part[1..-1] == "id"
-            regex_parts << "([0-9]+)" # any one or more words
-          else
-            regex_parts << "([a-zA-Z0-9]+)" # any one or more words
-          end
-        when "*"
-          vars << part[1..-1]  # . (Any character except line break), * (zero or more)
-          regex_parts < "(.*)" # .* (first sentence)
+          part[1..-1] == "id" ? "([0-9]+)" : "([a-zA-Z0-9]+)"
         else
-          regex_parts << part
+          part
         end
       end
 
@@ -113,42 +104,32 @@ module BlocWorks
       @rules.push({ regex: Regexp.new("^/#{regex}$"),
                     vars: vars, destination: destination,
                     options: options })
-      puts "\n<router.rb> BlocWorks::Router.map(url, *args)\nAFTER regex: #{regex}, vars: #{vars}, destination: #{destination}, options: #{options}\n"
-      # regex: , vars: [], destination: books#welcome, options: {:default=>{}}
-      # regex: ([a-zA-Z0-9]+)/([a-zA-Z0-9]+)/([a-zA-Z0-9]+), vars: ["controller", "id", "action"], destination: , options: {:default=>{}}
-      # regex: ([a-zA-Z0-9]+)/([a-zA-Z0-9]+), vars: ["controller", "id"], destination: , options: {:default=>{"action"=>"show"}}
-      # regex: ([a-zA-Z0-9]+), vars: ["controller"], destination: , options: {:default=>{"action"=>"index"}}
     end # Ends map
 
     # 'look_up_url' takes a URL and checks it against the @rules array of mapped routes.
     # If it finds a match it uses 'get_destination' to return the correct controller and action to call.
     def look_up_url(url)
-      puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (1)\nurl: #{url}\n"
+      puts "\n<router.rb> BlocWorks::Router.look_up_url(url)\n"
       @rules.each do |rule|
         # match is a Regexp method
         # /hay/.match('haystack') => #<MatchData "hay">
         rule_match = rule[:regex].match(url)
-        puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (2)\nrule: #{rule}, rule_match: #{rule_match}\n"
 
         if rule_match  # "", [] is truthy
-          options = rule[:options] #=> {:default => { "action" => "show" }}
-          params = options[:default].dup  # Read more below about dup
-          puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (3)\noptions: #{options}, params: #{params}\n"
+          # rule[:options] --> {:default => { "action" => "show" }}
+          params = rule[:options][:default].dup  # Read more below about dup
 
           # rule[:vars] = ["controller", "id"]
           rule[:vars].each_with_index do |var, index|
             # params = { "action" => "show" }
             params[var] = rule_match.captures[index] # Read more below about captures
-            puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (4)\nvar: #{var}, index: #{index}, params[var]: #{params[var]}\n"
           end
 
           if rule[:destination]
-            puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (5)\nrule[:destination]: #{rule[:destination]}\n"
             return get_destination(rule[:destination], params)
           else
             controller = params["controller"]
             action = params["action"]
-            puts "\n<router.rb> BlocWorks::Router.look_up_url(url) (6)\ncontroller: #{controller}, action: #{action}"
             return get_destination("#{controller}##{action}", params)
           end
         end
