@@ -16,7 +16,10 @@ module BlocWorks
         rack_response = get_response
         [rack_response.status, rack_response.header, [rack_response.body].flatten]
       else
-        [200, {'Content-Type' => 'text/html'}, [text].flatten]
+        # [200, {'Content-Type' => 'text/html'}, [text].flatten]
+        self.render(action, routing_params)
+        rack_response = get_response
+        [rack_response.status, rack_response.header, [rack_response.body].flatten]
       end
     end
 
@@ -75,9 +78,16 @@ module BlocWorks
       # File.join("usr", "mail", "gumby")   #=> "usr/mail/gumby"
       filename = File.join("app", "views", controller_dir, "#{view}.html.erb")
       template = File.read(filename)
+
+      vars = {}
+      instance_variables.each do |var|
+        key = var.to_s.gsub("@", "").to_sym
+        vars[key] = instance_variable_get(var)
+      end
+
       # Erubis converts erb file into HTML.
       eruby = Erubis::Eruby.new(template)
-      eruby.result(locals.merge(env: @env))
+      eruby.result(locals.merge(vars))
     end
 
     def controller_dir
