@@ -1,4 +1,5 @@
 require "erubis"
+require "pry"
 
 module BlocWorks
   class Controller
@@ -12,6 +13,7 @@ module BlocWorks
       puts "\n<controller.rb> BlocWorks::Controller.dispatch(action, routing_params = {})\naction: #{action}, routing_params: #{routing_params}\n"
       @routing_params = routing_params
       text = self.send(action)
+      binding.pry
       if has_response?
         rack_response = get_response
         [rack_response.status, rack_response.header, [rack_response.body].flatten]
@@ -28,6 +30,7 @@ module BlocWorks
       # a proc wraps the controller action.
       # In the proc, "new" method creates a new Rack object,
       # then call dispatch to call the appropriate controller action.
+      binding.pry
       proc {|env| self.new(env).dispatch(action, response)}
     end
 
@@ -51,6 +54,7 @@ module BlocWorks
     def response(text, status = 200, headers = {})
       puts "\n<controller.rb> BlocWorks::Controller.response(text, status = 200, headers = {})\ntext: #{text}, status: #{status}, headers: #{headers}\n"
       raise "Cannot respond multiple times" unless @response.nil?
+      binding.pry
       # It's better to have the response encapsulated into an object than
       # a response array [200, {'Content-Type' => 'text/html'}, [text]].
       @response = Rack::Response.new([text].flatten, status, headers)
@@ -59,6 +63,7 @@ module BlocWorks
     end
 
     def render(*args)
+      binding.pry
       puts "\n<controller.rb> BlocWorks::Controller.render(*args)\nargs: #{args}\n"
       response(create_response_array(*args))
     end
