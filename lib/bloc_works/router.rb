@@ -33,22 +33,12 @@ module BlocWorks
       # block = #<Proc:0x007fddc4af3da0@/.../bloc-books/config.ru:13>
       @router ||= Router.new
       @router.instance_eval(&block)
-
-      # ===== About 'instance_eval' ======
-      # class KlassWithSecret
-      #   def initialize
-      #     @secret = 99
-      #   end
-      # end
-      # k = KlassWithSecret.new
-      # k.instance_eval { @secret }   #=> 99
-      # ==================================
+      # instance_eval runs the codes inside block.
     end
 
     # Map URLs to routes and look up routes when given a URL.
     def get_rack_app(env)
       puts "<router.rb> BlocWorks::Application#get_rack_app"
-      # binding.pry
       if @router.nil?
         raise "No routes defined"
       end
@@ -90,7 +80,7 @@ module BlocWorks
       regex_parts = url_parts.map do |part|
         if part[0] == ":"
           vars << part[1..-1]
-          part[1..-1] == "id" ? "([0-9]+)" : "([a-zA-Z0-9]+)"
+          part[1..-1] == "id" ? "([0-9]+)" : "([a-zA-Z]+)"
         else
           part
         end
@@ -110,6 +100,7 @@ module BlocWorks
     # If it finds a match it uses 'get_destination' to return the correct controller and action to call.
     def look_up_url(url)
       puts "<router.rb> BlocWorks::Router#look_up_url"
+      _, ctrl, _ = url.split("/")
       @rules.each do |rule|
         # match is a Regexp method
         # /hay/.match('haystack') => #<MatchData "hay">
@@ -128,7 +119,8 @@ module BlocWorks
           if rule[:destination]
             return get_destination(rule[:destination], params)
           else
-            controller = params["controller"]
+            ctrl_params = params["controller"]
+            controller = ctrl_params ? ctrl_params : ctrl
             action = params["action"]
             return get_destination("#{controller}##{action}", params)
           end
@@ -148,6 +140,15 @@ module BlocWorks
         return controller.action($2, routing_params)
       end
       raise "Destination no found: #{destination}"
+    end
+
+    def resources(controller_name)
+      ctrl = controller_name.to_s
+
+      map("#{ctrl}", default: { "action" => "index" })
+      map("#{ctrl}/:action")
+      map("#{ctrl}/:id", default: { "action" => "show" })
+      map("#{ctrl}/:id/:action")
     end
   end # Ends Router
 end # Ends BlocWorks module
