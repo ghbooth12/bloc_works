@@ -4,19 +4,9 @@ class Object
   # second, runs it through snake_case,
   # third, tries again.
   def self.const_missing(const)
-    puts "\n<dependencies.rb> ()::Object.self.const_missing(const)\nconst: #{const}\n"
+    puts "<dependencies.rb> ()::Object.self.const_missing"
     require BlocWorks.snake_case(const.to_s)
     Object.const_get(const)
     # const_get returns a constant given a symbol.
-    # const_get() is an Object's method.
-      # module Foo
-      #   class Bar
-      #     VAL = 10
-      #   end
-      #
-      #   class Baz < Bar; end
-      # end
-      #
-      # Object.const_get('Foo::Baz::VAL')         # => 10
   end
 end

@@ -4,16 +4,15 @@ require "pry"
 module BlocWorks
   class Controller
     def initialize(env)
-      puts "\n<controller.rb> BlocWorks::Controller.initialize(env)\nenv: #{env}\n"
+      puts "<controller.rb> BlocWorks::Controller#initialize(env)"
       @env = env
       @routing_params = {}
     end
 
     def dispatch(action, routing_params = {})
-      puts "\n<controller.rb> BlocWorks::Controller.dispatch(action, routing_params = {})\naction: #{action}, routing_params: #{routing_params}\n"
+      puts "<controller.rb> BlocWorks::Controller#dispatch"
       @routing_params = routing_params
       text = self.send(action)
-      binding.pry
       if has_response?
         rack_response = get_response
         [rack_response.status, rack_response.header, [rack_response.body].flatten]
@@ -26,24 +25,22 @@ module BlocWorks
     end
 
     def self.action(action, response = {})
-      puts "\n<controller.rb> BlocWorks::Controller.self.action(action, response = {})\naction: #{action}, response: #{response}\n"
+      puts "<controller.rb> BlocWorks::Controller.action"
       # a proc wraps the controller action.
       # In the proc, "new" method creates a new Rack object,
       # then call dispatch to call the appropriate controller action.
-      binding.pry
       proc {|env| self.new(env).dispatch(action, response)}
     end
 
     # This returns either stored request object or new Rack request object.
     def request
-      puts "\n<controller.rb> BlocWorks::Controller.request\nBEFORE @request: #{@request}\n"
+      puts "<controller.rb> BlocWorks::Controller#request"
       # Rack request objects simplify access to elements of HTTP requests.
       @request ||= Rack::Request.new(@env)
-      puts "\n<controller.rb> BlocWorks::Controller.request\nAFTER @request: #{@request}\n"
     end
 
     def params
-      puts "\n<controller.rb> BlocWorks::Controller.params\n@routing_params: #{@routing_params}\n"
+      puts "<controller.rb> BlocWorks::Controller#params"
       # With request object, it is possible to retrieve "params".
       request
       @request.params.merge(@routing_params)
@@ -52,9 +49,8 @@ module BlocWorks
     # This creates a new Rack response object, or raises an error
     # if a controller action attempts to request multiple responses.
     def response(text, status = 200, headers = {})
-      puts "\n<controller.rb> BlocWorks::Controller.response(text, status = 200, headers = {})\ntext: #{text}, status: #{status}, headers: #{headers}\n"
+      puts "<controller.rb> BlocWorks::Controller#response"
       raise "Cannot respond multiple times" unless @response.nil?
-      binding.pry
       # It's better to have the response encapsulated into an object than
       # a response array [200, {'Content-Type' => 'text/html'}, [text]].
       @response = Rack::Response.new([text].flatten, status, headers)
@@ -62,24 +58,27 @@ module BlocWorks
       # a.flatten => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     end
 
-    def render(*args)
-      binding.pry
-      puts "\n<controller.rb> BlocWorks::Controller.render(*args)\nargs: #{args}\n"
+    def render(*args) # args = ["welcome", {}]
+      puts "<controller.rb> BlocWorks::Controller#render"
       response(create_response_array(*args))
     end
 
+    def redirect(action, locals={})
+      response(create_response_array(action, locals))
+    end
+
     def get_response
-      puts "\n<controller.rb> BlocWorks::Controller.get_response\n@response: #{@response}\n"
+      puts "<controller.rb> BlocWorks::Controller#get_response"
       @response  # @response: #<Rack::Response:0x007ffd11270db0>
     end
 
     def has_response?
-      puts "\n<controller.rb> BlocWorks::Controller.has_response?\n...\n"
+      puts "<controller.rb> BlocWorks::Controller#has_response?"
       !@response.nil?
     end
 
     def create_response_array(view, locals = {})
-      puts "\n<controller.rb> BlocWorks::Controller.create_response_array(view, locals = {})\nview: #{view}, locals: #{locals}\n"
+      puts "<controller.rb> BlocWorks::Controller#create_response_array"
       # File.join("usr", "mail", "gumby")   #=> "usr/mail/gumby"
       filename = File.join("app", "views", controller_dir, "#{view}.html.erb")
       template = File.read(filename)
@@ -96,7 +95,7 @@ module BlocWorks
     end
 
     def controller_dir
-      puts "\n<controller.rb> BlocWorks::Controller.controller_dir\nself: #{self}"
+      puts "<controller.rb> BlocWorks::Controller#controller_dir"
       klass = self.class.to_s # klass = "LabelsController"
       klass.slice!("Controller") #=> Cut "Controller" out of klass
       BlocWorks.snake_case(klass) # klass == "Labels"
